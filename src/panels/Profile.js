@@ -12,56 +12,73 @@ import {
   Textarea
 } from '@vkontakte/vkui';
 
+import { supabase } from '../supabase';
+
 export const Profile = ({ id, fetchedUser, setActivePanel }) => {
-  const [userSkills, setUserSkills] = useState([]);
+
+  const [skillsOffer, setSkillsOffer] = useState([]);
+  const [skillsLearn, setSkillsLearn] = useState([]);
   const [about, setAbout] = useState('');
-  const [editingSkillId, setEditingSkillId] = useState(null);
 
-  const levels = ['Начинающий', 'Средний', 'Продвинутый', 'Профессиональный'];
-
-  // Загружаем навыки из localStorage (синхронизация с Catalog)
   useEffect(() => {
-    const savedSkills = localStorage.getItem('skillUnitySkills');
-    if (savedSkills) {
-      setUserSkills(JSON.parse(savedSkills));
-    }
 
+    const savedOffer = localStorage.getItem('skillUnitySkillsOffer');
+    const savedLearn = localStorage.getItem('skillUnitySkillsLearn');
     const savedAbout = localStorage.getItem('skillUnityAbout');
-    if (savedAbout) {
-      setAbout(savedAbout);
-    }
+
+    if (savedOffer) setSkillsOffer(JSON.parse(savedOffer));
+    if (savedLearn) setSkillsLearn(JSON.parse(savedLearn));
+    if (savedAbout) setAbout(savedAbout);
+
   }, []);
 
-  // Автосохранение "Обо мне"
   useEffect(() => {
     localStorage.setItem('skillUnityAbout', about);
   }, [about]);
 
-  // Удаление навыка
-  const handleDeleteSkill = (id) => {
-    const updated = userSkills.filter((skill) => skill.id !== id);
-    setUserSkills(updated);
-    localStorage.setItem('skillUnitySkills', JSON.stringify(updated));
+
+  // 🚀 Публикация профиля
+  const publishProfile = async () => {
+
+    if (!fetchedUser) return;
+
+    const profile = {
+      vk_id: fetchedUser.id,
+      name: fetchedUser.first_name + ' ' + fetchedUser.last_name,
+      avatar: fetchedUser.photo_200,
+      about: about,
+      skills_offer: skillsOffer,
+      skills_learn: skillsLearn
+    };
+
+    const { error } = await supabase
+      .from('users')
+      .upsert(profile, { onConflict: 'vk_id' });
+
+    if (error) {
+      console.error(error);
+      alert('Ошибка сохранения профиля');
+    } else {
+      alert('Профиль опубликован!');
+    }
+
   };
 
-  // Начать редактирование
-  const startEditing = (id) => {
-    setEditingSkillId(id);
-  };
 
-  // Обновление уровня навыка
-  const updateSkillLevel = (id, newLevel) => {
-    const updated = userSkills.map((skill) =>
-      skill.id === id ? { ...skill, level: newLevel } : skill
-    );
+  const renderSkillCard = (item) => (
+    <Card key={item.id} mode="shadow" style={{ margin: 12 }}>
+      <Div>
+        <Title level="3">{item.skill}</Title>
+        <Text>Категория: {item.category}</Text>
+        <Text>Уровень: {item.level}</Text>
+      </Div>
+    </Card>
+  );
 
-    setUserSkills(updated);
-    localStorage.setItem('skillUnitySkills', JSON.stringify(updated));
-    setEditingSkillId(null);
-  };
 
   return (
     <Panel id={id} style={{ background: '#080904', color: 'white' }}>
+
       <PanelHeader
         style={{
           background: '#080904',
@@ -72,15 +89,20 @@ export const Profile = ({ id, fetchedUser, setActivePanel }) => {
         Профиль Skill Unity
       </PanelHeader>
 
-      {/* Блок профиля */}
+
+      {/* Блок пользователя */}
+
       <Group>
         <Div style={{ textAlign: 'center' }}>
+
           {fetchedUser ? (
             <>
               <Avatar size={96} src={fetchedUser.photo_200} />
+
               <Title level="2" style={{ marginTop: 12, color: '#35CE53' }}>
                 {fetchedUser.first_name} {fetchedUser.last_name}
               </Title>
+
               <Text>Участник платформы обмена навыками</Text>
             </>
           ) : (
@@ -89,42 +111,49 @@ export const Profile = ({ id, fetchedUser, setActivePanel }) => {
               <Title level="2" style={{ marginTop: 12, color: '#35CE53' }}>
                 Пользователь Skill Unity
               </Title>
-              <Text>Демо-профиль (режим разработки)</Text>
             </>
           )}
+
         </Div>
       </Group>
 
-      {/* Блок "Обо мне" */}
+
+      {/* ОБО МНЕ */}
+
       <Group>
         <Div>
           <Title level="2" style={{ color: '#35CE53' }}>
             Обо мне
           </Title>
+
           <Textarea
             value={about}
             onChange={(e) => setAbout(e.target.value)}
-            placeholder="Расскажите о себе, своих навыках и чему хотите научиться..."
+            placeholder="Расскажите о себе..."
             style={{
               background: '#0b0b0b',
               color: 'white'
             }}
           />
+
         </Div>
       </Group>
 
-      {/* Навыки (как LinkedIn) */}
+
+      {/* МОГУ НАУЧИТЬ */}
+
       <Group>
+
         <Div>
           <Title level="2" style={{ color: '#35CE53' }}>
-            Мои навыки
+            Могу научить
           </Title>
-          <Text>Навыки из каталога Skill Unity</Text>
         </Div>
 
-        {userSkills.length === 0 && (
+        {skillsOffer.length === 0 && (
           <Div>
-            <Text>Вы ещё не добавили навыки в каталоге</Text>
+            <Text>Вы ещё не добавили навыки</Text>
+
             <Button
               stretched
               style={{
@@ -135,66 +164,58 @@ export const Profile = ({ id, fetchedUser, setActivePanel }) => {
               }}
               onClick={() => setActivePanel('catalog')}
             >
-              Перейти в каталог навыков
+              Добавить навыки
             </Button>
           </Div>
         )}
 
-        {userSkills.map((item) => (
-          <Card key={item.id} mode="shadow" style={{ margin: 12 }}>
-            <Div>
-              <Title level="3">{item.skill}</Title>
-              <Text>Категория: {item.category}</Text>
-              <Text>Уровень: {item.level}</Text>
+        {skillsOffer.map(renderSkillCard)}
 
-              {editingSkillId === item.id ? (
-                <Div style={{ marginTop: 12 }}>
-                  <Text style={{ marginBottom: 8 }}>
-                    Изменить уровень:
-                  </Text>
-                  {levels.map((level) => (
-                    <Button
-                      key={level}
-                      size="s"
-                      style={{
-                        marginRight: 6,
-                        marginBottom: 6,
-                        background: '#FEE21F',
-                        color: '#080904'
-                      }}
-                      onClick={() => updateSkillLevel(item.id, level)}
-                    >
-                      {level}
-                    </Button>
-                  ))}
-                </Div>
-              ) : (
-                <Div style={{ marginTop: 12 }}>
-                  <Button
-                    size="m"
-                    style={{
-                      marginRight: 8,
-                      background: '#35CE53',
-                      color: '#080904'
-                    }}
-                    onClick={() => startEditing(item.id)}
-                  >
-                    ✏️ Редактировать
-                  </Button>
-
-                  <Button
-                    size="m"
-                    mode="destructive"
-                    onClick={() => handleDeleteSkill(item.id)}
-                  >
-                    🗑 Удалить
-                  </Button>
-                </Div>
-              )}
-            </Div>
-          </Card>
-        ))}
       </Group>
+
+
+      {/* ХОЧУ НАУЧИТЬСЯ */}
+
+      <Group>
+
+        <Div>
+          <Title level="2" style={{ color: '#35CE53' }}>
+            Хочу научиться
+          </Title>
+        </Div>
+
+        {skillsLearn.length === 0 && (
+          <Div>
+            <Text>Вы ещё не указали интересы</Text>
+          </Div>
+        )}
+
+        {skillsLearn.map(renderSkillCard)}
+
+      </Group>
+
+
+      {/* ПУБЛИКАЦИЯ */}
+
+      <Group>
+        <Div>
+
+          <Button
+            stretched
+            size="l"
+            style={{
+              background: '#35CE53',
+              color: '#080904',
+              fontWeight: 'bold'
+            }}
+            onClick={publishProfile}
+          >
+            📡 Опубликовать профиль
+          </Button>
+
+        </Div>
+      </Group>
+
     </Panel>
   );
 };

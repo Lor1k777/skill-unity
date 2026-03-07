@@ -13,19 +13,27 @@ import {
 export const Catalog = ({ id }) => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedSkill, setSelectedSkill] = useState(null);
+  const [selectedType, setSelectedType] = useState(null); // offer | learn
   const [successMessage, setSuccessMessage] = useState(false);
   const [editingSkillId, setEditingSkillId] = useState(null);
 
-  // Загрузка навыков (НЕ пропадают между вкладками)
-  const [userSkills, setUserSkills] = useState(() => {
-    const savedSkills = localStorage.getItem('skillUnitySkills');
-    return savedSkills ? JSON.parse(savedSkills) : [];
+  const [skillsOffer, setSkillsOffer] = useState(() => {
+    const saved = localStorage.getItem('skillUnitySkillsOffer');
+    return saved ? JSON.parse(saved) : [];
   });
 
-  // Автосохранение
+  const [skillsLearn, setSkillsLearn] = useState(() => {
+    const saved = localStorage.getItem('skillUnitySkillsLearn');
+    return saved ? JSON.parse(saved) : [];
+  });
+
   useEffect(() => {
-    localStorage.setItem('skillUnitySkills', JSON.stringify(userSkills));
-  }, [userSkills]);
+    localStorage.setItem('skillUnitySkillsOffer', JSON.stringify(skillsOffer));
+  }, [skillsOffer]);
+
+  useEffect(() => {
+    localStorage.setItem('skillUnitySkillsLearn', JSON.stringify(skillsLearn));
+  }, [skillsLearn]);
 
   const categories = {
     '🎨 Хобби': ['Рисование', 'Музыка', 'Фотография', 'Видеомонтаж'],
@@ -36,45 +44,109 @@ export const Catalog = ({ id }) => {
 
   const levels = ['Начинающий', 'Средний', 'Продвинутый', 'Профессиональный'];
 
-  // Мгновенное добавление навыка
   const handleSelectLevel = (level) => {
     const newSkill = {
       id: Date.now(),
       category: selectedCategory,
       skill: selectedSkill,
-      level: level,
+      level
     };
 
-    setUserSkills((prev) => [...prev, newSkill]);
-    setSuccessMessage(true);
+    if (selectedType === 'offer') {
+      setSkillsOffer(prev => [...prev, newSkill]);
+    } else {
+      setSkillsLearn(prev => [...prev, newSkill]);
+    }
 
+    setSuccessMessage(true);
     setSelectedCategory(null);
     setSelectedSkill(null);
+    setSelectedType(null);
 
-    setTimeout(() => {
-      setSuccessMessage(false);
-    }, 2000);
+    setTimeout(() => setSuccessMessage(false), 2000);
   };
 
-  // Удаление навыка
-  const handleDeleteSkill = (id) => {
-    setUserSkills((prev) => prev.filter((skill) => skill.id !== id));
+  const handleDeleteSkill = (id, type) => {
+    if (type === 'offer') {
+      setSkillsOffer(prev => prev.filter(skill => skill.id !== id));
+    } else {
+      setSkillsLearn(prev => prev.filter(skill => skill.id !== id));
+    }
   };
 
-  // Начать редактирование
   const startEditing = (id) => {
     setEditingSkillId(id);
   };
 
-  // Изменение уровня навыка
-  const updateSkillLevel = (id, newLevel) => {
-    setUserSkills((prev) =>
-      prev.map((skill) =>
-        skill.id === id ? { ...skill, level: newLevel } : skill
-      )
-    );
+  const updateSkillLevel = (id, newLevel, type) => {
+    if (type === 'offer') {
+      setSkillsOffer(prev =>
+        prev.map(skill =>
+          skill.id === id ? { ...skill, level: newLevel } : skill
+        )
+      );
+    } else {
+      setSkillsLearn(prev =>
+        prev.map(skill =>
+          skill.id === id ? { ...skill, level: newLevel } : skill
+        )
+      );
+    }
+
     setEditingSkillId(null);
   };
+
+  const renderSkillCard = (item, type) => (
+    <Card key={item.id} mode="shadow" style={{ margin: 12 }}>
+      <Div>
+        <Title level="3">{item.skill}</Title>
+        <Text>Категория: {item.category}</Text>
+        <Text>Уровень: {item.level}</Text>
+
+        {editingSkillId === item.id ? (
+          <Div style={{ marginTop: 12 }}>
+            {levels.map(level => (
+              <Button
+                key={level}
+                size="s"
+                style={{
+                  marginRight: 6,
+                  marginBottom: 6,
+                  background: '#FEE21F',
+                  color: '#080904'
+                }}
+                onClick={() => updateSkillLevel(item.id, level, type)}
+              >
+                {level}
+              </Button>
+            ))}
+          </Div>
+        ) : (
+          <Div style={{ marginTop: 12 }}>
+            <Button
+              size="m"
+              style={{
+                marginRight: 8,
+                background: '#35CE53',
+                color: '#080904'
+              }}
+              onClick={() => startEditing(item.id)}
+            >
+              ✏️ Редактировать
+            </Button>
+
+            <Button
+              size="m"
+              mode="destructive"
+              onClick={() => handleDeleteSkill(item.id, type)}
+            >
+              🗑 Удалить
+            </Button>
+          </Div>
+        )}
+      </Div>
+    </Card>
+  );
 
   return (
     <Panel id={id} style={{ background: '#080904', color: 'white' }}>
@@ -88,28 +160,70 @@ export const Catalog = ({ id }) => {
         Каталог навыков
       </PanelHeader>
 
-      {/* Уведомление */}
       {successMessage && (
         <Group>
           <Div>
             <Title level="2" style={{ color: '#35CE53' }}>
-              Профиль навыка создан 🎉
+              Навык добавлен 🎉
             </Title>
-            <Text>Навык успешно добавлен в ваш профиль</Text>
+            <Text>Навык успешно добавлен в профиль</Text>
           </Div>
         </Group>
       )}
 
-      {/* Шаг 1 — Категории */}
-      {!selectedCategory && !selectedSkill && (
+      {!selectedType && (
         <Group>
           <Div>
             <Title level="2" style={{ color: '#35CE53' }}>
-              Выберите категорию навыков
+              Что вы хотите сделать?
             </Title>
           </Div>
 
-          {Object.keys(categories).map((category) => (
+          <Card mode="shadow" style={{ margin: 12 }}>
+            <Div>
+              <Title level="3">Могу научить</Title>
+              <Button
+                stretched
+                style={{
+                  marginTop: 10,
+                  background: '#35CE53',
+                  color: '#080904'
+                }}
+                onClick={() => setSelectedType('offer')}
+              >
+                Добавить навык
+              </Button>
+            </Div>
+          </Card>
+
+          <Card mode="shadow" style={{ margin: 12 }}>
+            <Div>
+              <Title level="3">Хочу научиться</Title>
+              <Button
+                stretched
+                style={{
+                  marginTop: 10,
+                  background: '#FEE21F',
+                  color: '#080904'
+                }}
+                onClick={() => setSelectedType('learn')}
+              >
+                Добавить интерес
+              </Button>
+            </Div>
+          </Card>
+        </Group>
+      )}
+
+      {selectedType && !selectedCategory && !selectedSkill && (
+        <Group>
+          <Div>
+            <Title level="2" style={{ color: '#35CE53' }}>
+              Выберите категорию
+            </Title>
+          </Div>
+
+          {Object.keys(categories).map(category => (
             <Card key={category} mode="shadow" style={{ margin: 12 }}>
               <Div>
                 <Title level="3">{category}</Title>
@@ -118,8 +232,7 @@ export const Catalog = ({ id }) => {
                   style={{
                     marginTop: 10,
                     background: '#35CE53',
-                    color: '#080904',
-                    fontWeight: 'bold'
+                    color: '#080904'
                   }}
                   onClick={() => setSelectedCategory(category)}
                 >
@@ -131,17 +244,15 @@ export const Catalog = ({ id }) => {
         </Group>
       )}
 
-      {/* Шаг 2 — Навыки */}
       {selectedCategory && !selectedSkill && (
         <Group>
           <Div>
             <Title level="2" style={{ color: '#35CE53' }}>
               Категория: {selectedCategory}
             </Title>
-            <Text>Выберите конкретный навык</Text>
           </Div>
 
-          {categories[selectedCategory].map((skill) => (
+          {categories[selectedCategory].map(skill => (
             <Card key={skill} mode="shadow" style={{ margin: 12 }}>
               <Div>
                 <Title level="3">{skill}</Title>
@@ -150,40 +261,27 @@ export const Catalog = ({ id }) => {
                   style={{
                     marginTop: 10,
                     background: '#FEE21F',
-                    color: '#080904',
-                    fontWeight: 'bold'
+                    color: '#080904'
                   }}
                   onClick={() => setSelectedSkill(skill)}
                 >
-                  Выбрать навык
+                  Выбрать
                 </Button>
               </Div>
             </Card>
           ))}
-
-          <Div>
-            <Button
-              stretched
-              mode="secondary"
-              onClick={() => setSelectedCategory(null)}
-            >
-              Назад к категориям
-            </Button>
-          </Div>
         </Group>
       )}
 
-      {/* Шаг 3 — Уровень */}
       {selectedSkill && (
         <Group>
           <Div>
             <Title level="2" style={{ color: '#35CE53' }}>
-              Навык: {selectedSkill}
+              Уровень навыка
             </Title>
-            <Text>Укажите ваш уровень владения</Text>
           </Div>
 
-          {levels.map((level) => (
+          {levels.map(level => (
             <Card key={level} mode="shadow" style={{ margin: 12 }}>
               <Div>
                 <Title level="3">{level}</Title>
@@ -192,8 +290,7 @@ export const Catalog = ({ id }) => {
                   style={{
                     marginTop: 10,
                     background: '#35CE53',
-                    color: '#080904',
-                    fontWeight: 'bold'
+                    color: '#080904'
                   }}
                   onClick={() => handleSelectLevel(level)}
                 >
@@ -202,83 +299,28 @@ export const Catalog = ({ id }) => {
               </Div>
             </Card>
           ))}
-
-          <Div>
-            <Button
-              stretched
-              mode="secondary"
-              onClick={() => setSelectedSkill(null)}
-            >
-              Назад к навыкам
-            </Button>
-          </Div>
         </Group>
       )}
 
-      {/* Мои навыки с РЕДАКТИРОВАНИЕМ и УДАЛЕНИЕМ */}
-      {userSkills.length > 0 && (
+      {skillsOffer.length > 0 && (
         <Group>
           <Div>
             <Title level="2" style={{ color: '#35CE53' }}>
-              Мои добавленные навыки
+              Могу научить
             </Title>
           </Div>
+          {skillsOffer.map(skill => renderSkillCard(skill, 'offer'))}
+        </Group>
+      )}
 
-          {userSkills.map((item) => (
-            <Card key={item.id} mode="shadow" style={{ margin: 12 }}>
-              <Div>
-                <Title level="3">{item.skill}</Title>
-                <Text>Категория: {item.category}</Text>
-                <Text>Уровень: {item.level}</Text>
-
-                {/* Режим редактирования */}
-                {editingSkillId === item.id ? (
-                  <Div style={{ marginTop: 12 }}>
-                    <Text style={{ marginBottom: 8 }}>
-                      Изменить уровень:
-                    </Text>
-                    {levels.map((level) => (
-                      <Button
-                        key={level}
-                        size="s"
-                        style={{
-                          marginRight: 6,
-                          marginBottom: 6,
-                          background: '#FEE21F',
-                          color: '#080904'
-                        }}
-                        onClick={() => updateSkillLevel(item.id, level)}
-                      >
-                        {level}
-                      </Button>
-                    ))}
-                  </Div>
-                ) : (
-                  <Div style={{ marginTop: 12 }}>
-                    <Button
-                      size="m"
-                      style={{
-                        marginRight: 8,
-                        background: '#35CE53',
-                        color: '#080904'
-                      }}
-                      onClick={() => startEditing(item.id)}
-                    >
-                      ✏️ Редактировать уровень
-                    </Button>
-
-                    <Button
-                      size="m"
-                      mode="destructive"
-                      onClick={() => handleDeleteSkill(item.id)}
-                    >
-                      🗑 Удалить
-                    </Button>
-                  </Div>
-                )}
-              </Div>
-            </Card>
-          ))}
+      {skillsLearn.length > 0 && (
+        <Group>
+          <Div>
+            <Title level="2" style={{ color: '#35CE53' }}>
+              Хочу научиться
+            </Title>
+          </Div>
+          {skillsLearn.map(skill => renderSkillCard(skill, 'learn'))}
         </Group>
       )}
     </Panel>
