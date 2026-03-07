@@ -1,0 +1,168 @@
+/* ===============================
+   SKILL UNITY — WOW UI DESIGN
+   Цвета: #35CE53 (green) #FEE21F (yellow) #080904 (black)
+================================ */
+
+/* Базовый фон */
+body {
+  background: #080904;
+  overflow-x: hidden;
+  margin: 0;
+  font-family: Inter, system-ui, sans-serif;
+}
+
+/* ===== АНИМИРОВАННЫЙ ФОН (как в макетах) ===== */
+.skill-background {
+  position: relative;
+  min-height: 100vh;
+  background: radial-gradient(circle at 20% 20%, #0b0f0c 0%, #080904 60%);
+  overflow: hidden;
+}
+
+/* Движущиеся неоновые штрихи */
+.skill-background::before {
+  content: "";
+  position: absolute;
+  width: 300%;
+  height: 300%;
+  background-image:
+    repeating-linear-gradient(
+      120deg,
+      rgba(53, 206, 83, 0.12) 0px,
+      rgba(53, 206, 83, 0.12) 2px,
+      transparent 2px,
+      transparent 70px
+    ),
+    repeating-linear-gradient(
+      120deg,
+      rgba(254, 226, 31, 0.10) 30px,
+      rgba(254, 226, 31, 0.10) 32px,
+      transparent 32px,
+      transparent 110px
+    );
+  animation: neonMove 35s linear infinite;
+  z-index: 0;
+  opacity: 0.8;
+}
+
+/* Параллакс движение */
+@keyframes neonMove {
+  0% {
+    transform: translateX(0px) translateY(0px);
+  }
+  50% {
+    transform: translateX(-40px) translateY(-30px);
+  }
+  100% {
+    transform: translateX(0px) translateY(0px);
+  }
+}
+
+/* Контент поверх фона */
+.skill-content {
+  position: relative;
+  z-index: 2;
+  animation: fadeInUp 0.6s ease;
+}
+
+/* Плавное появление */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== НЕОНОВЫЙ ЛОГО ЭФФЕКТ ===== */
+.neon-title {
+  color: #35CE53;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-shadow:
+    0 0 8px rgba(53, 206, 83, 0.7),
+    0 0 20px rgba(53, 206, 83, 0.4);
+}
+
+/* Подзаголовок glow */
+.neon-subtitle {
+  color: #ffffff;
+  opacity: 0.9;
+}
+
+/* ===== GLASS КАРТОЧКИ (премиум стиль) ===== */
+.glass-card {
+  background: rgba(20, 20, 20, 0.7) !important;
+  backdrop-filter: blur(12px);
+  border-radius: 18px !important;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+  transform: translateY(-6px);
+  box-shadow:
+    0 15px 40px rgba(0, 0, 0, 0.7),
+    0 0 20px rgba(53, 206, 83, 0.15);
+}
+
+/* ===== ПРЕМИАЛЬНЫЕ КНОПКИ ===== */
+.btn-green {
+  background: linear-gradient(135deg, #35CE53, #2ab947) !important;
+  color: #080904 !important;
+  font-weight: 700 !important;
+  border-radius: 14px !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 8px 25px rgba(53, 206, 83, 0.35);
+}
+
+.btn-green:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 12px 35px rgba(53, 206, 83, 0.5);
+}
+
+.btn-green:active {
+  transform: scale(0.96);
+}
+
+/* Жёлтая кнопка */
+.btn-yellow {
+  background: linear-gradient(135deg, #FEE21F, #ffd900) !important;
+  color: #080904 !important;
+  font-weight: 700 !important;
+  border-radius: 14px !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 8px 25px rgba(254, 226, 31, 0.35);
+}
+
+.btn-yellow:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 12px 35px rgba(254, 226, 31, 0.5);
+}
+
+.btn-yellow:active {
+  transform: scale(0.96);
+}
+
+/* ===== КАРТОЧКИ ПОЛЬЗОВАТЕЛЕЙ (поиск) ===== */
+.user-card {
+  background: linear-gradient(145deg, #111111, #1a1a1a) !important;
+  border-radius: 16px !important;
+  border: 1px solid rgba(53, 206, 83, 0.15);
+  transition: all 0.3s ease;
+}
+
+.user-card:hover {
+  transform: translateY(-5px);
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.8),
+    0 0 25px rgba(53, 206, 83, 0.25);
+}
+
+/* Плавный переход между вкладками */
+.vkuiView__panel {
+  animation: fadeInUp 0.4s ease;
+}
