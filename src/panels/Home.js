@@ -1,4 +1,5 @@
 import { Panel, PanelHeader, Group, Div, Title, Text, Button } from '@vkontakte/vkui';
+import logo from '../assets/logo.jpg';
 
 export const Home = ({ id, setActivePanel }) => {
   return (

@@ -42,8 +42,13 @@ export const App = () => {
 }, []);
 
   return (
-    <SplitLayout>
-      <SplitCol autoSpaced>
+    <SplitLayout
+  style={{
+    paddingBottom: 'var(--vk-safe-area-inset-bottom)',
+    paddingTop: 'var(--vk-safe-area-inset-top)'
+  }}
+>
+      <SplitCol autoSpaced style={{ height: '100vh' }}>
         <View activePanel={activePanel}>
           <Home
             id="home"

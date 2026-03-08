@@ -1,3 +1,9 @@
+import bridge from '@vkontakte/vk-bridge';
+
+bridge.send('VKWebAppInit');
+bridge.send('VKWebAppSetViewSettings', {
+  status_bar_style: 'light'
+});
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './styles.css';
