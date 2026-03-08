@@ -5,8 +5,7 @@ import {
   SplitLayout,
   SplitCol,
   Tabbar,
-  TabbarItem,
-  ScreenSpinner
+  TabbarItem
 } from '@vkontakte/vkui';
 
 import {
@@ -16,58 +15,83 @@ import {
   Icon28UserOutline
 } from '@vkontakte/icons';
 
-// Импорт панелей
+// панели
 import { Home } from './panels/Home';
 import { Exchange } from './panels/Exchange';
 import { Catalog } from './panels/Catalog';
 import { Profile } from './panels/Profile';
 
 export const App = () => {
+
   const [activePanel, setActivePanel] = useState('home');
   const [fetchedUser, setUser] = useState(null);
-  const [popout, setPopout] = useState(null);
 
   useEffect(() => {
-  async function fetchData() {
-    try {
-      const user = await bridge.send('VKWebAppGetUserInfo');
-      setUser(user);
-    } catch (e) {
-      console.log('Dev mode: VK user not available');
-      // В режиме разработки просто продолжаем без пользователя
-      setUser(null);
+
+    bridge.send('VKWebAppInit');
+
+    async function fetchData() {
+      try {
+        const user = await bridge.send('VKWebAppGetUserInfo');
+        setUser(user);
+      } catch (e) {
+        console.log('VK user not available (dev mode)');
+        setUser(null);
+      }
     }
-  }
-  fetchData();
-}, []);
+
+    fetchData();
+
+  }, []);
 
   return (
+
     <SplitLayout
-  style={{
-    paddingBottom: 'var(--vk-safe-area-inset-bottom)',
-    paddingTop: 'var(--vk-safe-area-inset-top)'
-  }}
->
-      <SplitCol autoSpaced style={{ height: '100vh' }}>
-        <View activePanel={activePanel}>
+      className="app-root"
+      style={{
+        paddingBottom: 'var(--vk-safe-area-inset-bottom)',
+        paddingTop: 'var(--vk-safe-area-inset-top)'
+      }}
+    >
+
+      {/* ПАРАЛЛАКС ФОН */}
+      <div className="skill-parallax-bg"></div>
+
+      <SplitCol autoSpaced className="app-container">
+
+        <View
+          activePanel={activePanel}
+          className="app-view"
+        >
+
           <Home
             id="home"
             fetchedUser={fetchedUser}
             setActivePanel={setActivePanel}
           />
+
           <Exchange
             id="exchange"
             fetchedUser={fetchedUser}
           />
-          <Catalog id="catalog" />
+
+          <Catalog
+            id="catalog"
+          />
+
           <Profile
             id="profile"
             fetchedUser={fetchedUser}
             setActivePanel={setActivePanel}
           />
+
         </View>
 
-        <Tabbar>
+
+        {/* TABBAR */}
+
+        <Tabbar className="app-tabbar">
+
           <TabbarItem
             onClick={() => setActivePanel('home')}
             selected={activePanel === 'home'}
@@ -99,10 +123,15 @@ export const App = () => {
           >
             <Icon28UserOutline />
           </TabbarItem>
+
         </Tabbar>
 
       </SplitCol>
+
     </SplitLayout>
+
   );
+
 };
+
 export default App;
