@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import bridge from '@vkontakte/vk-bridge';
+
 import {
   View,
   SplitLayout,
@@ -15,7 +16,6 @@ import {
   Icon28UserOutline
 } from '@vkontakte/icons';
 
-// панели
 import { Home } from './panels/Home';
 import { Exchange } from './panels/Exchange';
 import { Catalog } from './panels/Catalog';
@@ -30,17 +30,16 @@ export const App = () => {
 
     bridge.send('VKWebAppInit');
 
-    async function fetchData() {
+    const fetchUser = async () => {
       try {
         const user = await bridge.send('VKWebAppGetUserInfo');
         setUser(user);
-      } catch (e) {
-        console.log('VK user not available (dev mode)');
-        setUser(null);
+      } catch {
+        console.log('VK user unavailable (dev mode)');
       }
-    }
+    };
 
-    fetchData();
+    fetchUser();
 
   }, []);
 
@@ -49,15 +48,20 @@ export const App = () => {
     <SplitLayout
       className="app-root"
       style={{
-        paddingBottom: 'var(--vk-safe-area-inset-bottom)',
-        paddingTop: 'var(--vk-safe-area-inset-top)'
+        paddingTop: 'var(--vk-safe-area-inset-top)',
+        paddingBottom: 'var(--vk-safe-area-inset-bottom)'
       }}
     >
 
-      {/* ПАРАЛЛАКС ФОН */}
+      {/* Глобальный фон */}
       <div className="skill-parallax-bg"></div>
 
-      <SplitCol autoSpaced className="app-container">
+      <SplitCol
+        autoSpaced
+        className="app-container"
+      >
+
+        {/* Панели */}
 
         <View
           activePanel={activePanel}
@@ -88,37 +92,37 @@ export const App = () => {
         </View>
 
 
-        {/* TABBAR */}
+        {/* Нижняя навигация */}
 
         <Tabbar className="app-tabbar">
 
           <TabbarItem
-            onClick={() => setActivePanel('home')}
             selected={activePanel === 'home'}
+            onClick={() => setActivePanel('home')}
             text="Главная"
           >
             <Icon28HomeOutline />
           </TabbarItem>
 
           <TabbarItem
-            onClick={() => setActivePanel('exchange')}
             selected={activePanel === 'exchange'}
+            onClick={() => setActivePanel('exchange')}
             text="Поиск"
           >
             <Icon28UsersOutline />
           </TabbarItem>
 
           <TabbarItem
-            onClick={() => setActivePanel('catalog')}
             selected={activePanel === 'catalog'}
+            onClick={() => setActivePanel('catalog')}
             text="Навыки"
           >
             <Icon28ListOutline />
           </TabbarItem>
 
           <TabbarItem
-            onClick={() => setActivePanel('profile')}
             selected={activePanel === 'profile'}
+            onClick={() => setActivePanel('profile')}
             text="Профиль"
           >
             <Icon28UserOutline />

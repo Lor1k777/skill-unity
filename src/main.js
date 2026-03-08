@@ -1,21 +1,25 @@
+import React from 'react';
+import { createRoot } from 'react-dom/client';
 import bridge from '@vkontakte/vk-bridge';
 
+import './styles.css';
+import { AppConfig } from './AppConfig';
+
+// Инициализация VK Mini App
 bridge.send('VKWebAppInit');
+
 bridge.send('VKWebAppSetViewSettings', {
   status_bar_style: 'light'
 });
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import './styles.css';
-import App from './App';
-import { createRoot } from 'react-dom/client';
-import vkBridge from '@vkontakte/vk-bridge';
-import { AppConfig } from './AppConfig.js';
 
-vkBridge.send('VKWebAppInit');
+// Рендер приложения
+createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <AppConfig />
+  </React.StrictMode>
+);
 
-createRoot(document.getElementById('root')).render(<AppConfig />);
-
+// Dev console
 if (import.meta.env.MODE === 'development') {
   import('./eruda.js');
 }

@@ -1,41 +1,119 @@
 import React from 'react';
-import { Panel, PanelHeader, Group, Div, Title, Text, Button, Avatar } from '@vkontakte/vkui';
-import logo from '../assets/logo.jpg'; // оставь если логотип есть
+import {
+  Panel,
+  PanelHeader,
+  Group,
+  Div,
+  Title,
+  Text,
+  Button,
+  Avatar,
+  Card
+} from '@vkontakte/vkui';
 
-export const Home = ({ id, fetchedUser, setActivePanel }) => {
+import logo from '../assets/logo.jpg';
+
+export const Home = ({ id, setActivePanel }) => {
   return (
     <Panel id={id} className="skill-background">
-      <div className="skill-content">
-        <PanelHeader className="neon-title">Skill Unity</PanelHeader>
 
+      <div className="skill-content">
+
+        {/* Header без дублирования */}
+        <PanelHeader />
+
+        {/* HERO */}
         <Group>
           <Div>
-            <div className="glass-card" style={{ padding: 22 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
-                <div style={{ flex: 1 }}>
-                  <Title level="2" className="neon-title">Skill Unity</Title>
-                  <Text className="neon-subtitle">Учитесь у других — делитесь своим опытом</Text>
-                </div>
 
-                {logo ? (
-                  <img src={logo} alt="Skill Unity" style={{ width: 84, height: 84, borderRadius: 12 }} />
-                ) : (
-                  <Avatar size={84} />
-                )}
+            <div className="glass-card" style={{ padding: 28, textAlign: "center" }}>
+
+              {/* LOGO */}
+              {logo ? (
+                <img
+                  src={logo}
+                  alt="Skill Unity"
+                  style={{
+                    width: 110,
+                    height: 110,
+                    borderRadius: 20,
+                    marginBottom: 16
+                  }}
+                />
+              ) : (
+                <Avatar size={110} style={{ marginBottom: 16 }} />
+              )}
+
+              {/* TITLE */}
+              <Title level="1" className="neon-title">
+                Skill Unity
+              </Title>
+
+              <Text className="neon-subtitle" style={{ marginTop: 6 }}>
+                Учитесь у других — делитесь своим опытом
+              </Text>
+
+              {/* ACTION BUTTONS */}
+              <div style={{ marginTop: 24 }}>
+
+                <Button
+                  className="btn-green"
+                  stretched
+                  size="l"
+                  style={{ marginBottom: 12 }}
+                  onClick={() => setActivePanel('exchange')}
+                >
+                  🔍 Найти собеседника
+                </Button>
+
+                <Button
+                  className="btn-yellow"
+                  stretched
+                  size="l"
+                  onClick={() => setActivePanel('catalog')}
+                >
+                  📚 Каталог навыков
+                </Button>
+
               </div>
 
-              <div style={{ marginTop: 18 }}>
-                <Button className="btn-green" stretched onClick={() => setActivePanel('exchange')}>🔍 Найти собеседника по навыкам</Button>
-              </div>
-
-              <div style={{ marginTop: 12 }}>
-                <Button className="btn-yellow" stretched onClick={() => setActivePanel('catalog')}>📚 Перейти в каталог навыков</Button>
-              </div>
             </div>
+
           </Div>
         </Group>
+
+
+        {/* FEATURES */}
+        <Group>
+          <Div>
+
+            <Card className="glass-card" style={{ padding: 18, marginBottom: 12 }}>
+              <Title level="3">🤝 Обмен навыками</Title>
+              <Text className="small-muted">
+                Найдите людей, которые могут научить вас новым навыкам и поделитесь своими знаниями.
+              </Text>
+            </Card>
+
+            <Card className="glass-card" style={{ padding: 18, marginBottom: 12 }}>
+              <Title level="3">🎯 Умный поиск</Title>
+              <Text className="small-muted">
+                Подбираем пользователей по навыкам, уровню и интересам.
+              </Text>
+            </Card>
+
+            <Card className="glass-card" style={{ padding: 18 }}>
+              <Title level="3">🚀 Развитие</Title>
+              <Text className="small-muted">
+                Развивайте навыки через практическое общение и обучение друг у друга.
+              </Text>
+            </Card>
+
+          </Div>
+        </Group>
+
       </div>
     </Panel>
   );
 };
+
 export default Home;
