@@ -7,6 +7,7 @@ export const Profile = ({ id, fetchedUser, setActivePanel }) => {
   const [skillsOffer, setSkillsOffer] = useState([]);
   const [skillsLearn, setSkillsLearn] = useState([]);
   const [about, setAbout] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
 
@@ -24,30 +25,48 @@ export const Profile = ({ id, fetchedUser, setActivePanel }) => {
     localStorage.setItem('skillUnityAbout', about);
   }, [about]);
 
+  useEffect(() => {
+    localStorage.setItem('skillUnitySkillsOffer', JSON.stringify(skillsOffer));
+  }, [skillsOffer]);
+
+  useEffect(() => {
+    localStorage.setItem('skillUnitySkillsLearn', JSON.stringify(skillsLearn));
+  }, [skillsLearn]);
+
 
   const publishProfile = async () => {
 
-    if (!fetchedUser) return;
+    if (!fetchedUser) {
+      alert('Не удалось получить данные пользователя VK');
+      return;
+    }
+
+    setSaving(true);
 
     const profile = {
       vk_id: fetchedUser.id,
       name: fetchedUser.first_name + ' ' + fetchedUser.last_name,
       avatar: fetchedUser.photo_200,
-      about,
-      skills_offer: skillsOffer,
-      skills_learn: skillsLearn
+      about: about || '',
+      skills_offer: skillsOffer || [],
+      skills_learn: skillsLearn || []
     };
+
+    console.log('Publishing profile:', profile);
 
     const { error } = await supabase
       .from('users')
-      .upsert(profile, { onConflict: 'vk_id' });
+      .upsert(profile);
+
+    setSaving(false);
 
     if (error) {
-      console.error(error);
-      alert('Ошибка сохранения профиля');
-    } else {
-      alert('Профиль опубликован!');
+      console.error('Supabase error:', error);
+      alert('Ошибка публикации профиля');
+      return;
     }
+
+    alert('Профиль опубликован!');
 
   };
 
@@ -72,8 +91,6 @@ export const Profile = ({ id, fetchedUser, setActivePanel }) => {
       <div className="skill-content">
 
         <PanelHeader />
-
-        {/* HERO PROFILE */}
 
         <Group>
 
@@ -107,8 +124,6 @@ export const Profile = ({ id, fetchedUser, setActivePanel }) => {
         </Group>
 
 
-        {/* ABOUT */}
-
         <Group>
 
           <Div>
@@ -133,8 +148,6 @@ export const Profile = ({ id, fetchedUser, setActivePanel }) => {
 
         </Group>
 
-
-        {/* OFFER */}
 
         <Group>
 
@@ -185,8 +198,6 @@ export const Profile = ({ id, fetchedUser, setActivePanel }) => {
         </Group>
 
 
-        {/* LEARN */}
-
         <Group>
 
           <Div>
@@ -236,8 +247,6 @@ export const Profile = ({ id, fetchedUser, setActivePanel }) => {
         </Group>
 
 
-        {/* SAVE */}
-
         <Group>
 
           <Div>
@@ -246,9 +255,10 @@ export const Profile = ({ id, fetchedUser, setActivePanel }) => {
               className="btn-green"
               stretched
               size="l"
+              disabled={saving}
               onClick={publishProfile}
             >
-              📡 Опубликовать профиль
+              {saving ? 'Публикация...' : '📡 Опубликовать профиль'}
             </Button>
 
           </Div>
