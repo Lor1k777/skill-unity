@@ -265,7 +265,8 @@ export const Exchange = ({ id }) => {
 
           {matches.map((p, idx) => {
 
-            const skills = p.skills_offer || [];
+            const skillsOffer = p.skills_offer || [];
+            const skillsLearn = p.skills_learn || [];
 
             return (
 
@@ -283,18 +284,42 @@ export const Exchange = ({ id }) => {
                       {p.about || 'Информация отсутствует'}
                     </Text>
 
+                    {/* МОЖЕТ НАУЧИТЬ */}
+
                     <div style={{ marginTop: 10 }}>
 
-                      {skills.length > 0 ? (
+                      <Text weight="medium">🟢 Может научить:</Text>
 
-                        skills.map((s, i) => (
+                      {skillsOffer.length > 0 ? (
+
+                        skillsOffer.map((s, i) => (
                           <span key={i} className="skill-badge" style={{ marginRight: 6 }}>
                             {s.skill} • {s.level}
                           </span>
                         ))
 
                       ) : (
-                        <Text className="small-muted">Навыки не указаны</Text>
+                        <Text className="small-muted">Не указано</Text>
+                      )}
+
+                    </div>
+
+                    {/* ХОЧЕТ НАУЧИТЬСЯ */}
+
+                    <div style={{ marginTop: 10 }}>
+
+                      <Text weight="medium">🟡 Хочет изучить:</Text>
+
+                      {skillsLearn.length > 0 ? (
+
+                        skillsLearn.map((s, i) => (
+                          <span key={i} className="skill-badge" style={{ marginRight: 6 }}>
+                            {s.skill}
+                          </span>
+                        ))
+
+                      ) : (
+                        <Text className="small-muted">Не указано</Text>
                       )}
 
                     </div>

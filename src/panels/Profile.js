@@ -7,7 +7,6 @@ export const Profile = ({ id, fetchedUser, setActivePanel }) => {
   const [skillsOffer, setSkillsOffer] = useState([]);
   const [skillsLearn, setSkillsLearn] = useState([]);
   const [about, setAbout] = useState('');
-  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
 
@@ -37,11 +36,9 @@ export const Profile = ({ id, fetchedUser, setActivePanel }) => {
   const publishProfile = async () => {
 
     if (!fetchedUser) {
-      alert('Не удалось получить данные пользователя VK');
+      alert('Ошибка получения пользователя VK');
       return;
     }
-
-    setSaving(true);
 
     const profile = {
       vk_id: fetchedUser.id,
@@ -52,37 +49,58 @@ export const Profile = ({ id, fetchedUser, setActivePanel }) => {
       skills_learn: skillsLearn || []
     };
 
-    console.log('Publishing profile:', profile);
+    try {
 
-    const { error } = await supabase
-      .from('users')
-      .upsert(profile);
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('vk_id', fetchedUser.id)
+        .maybeSingle();
 
-    setSaving(false);
+      if (error) {
+        console.error(error);
+        alert('Ошибка проверки профиля');
+        return;
+      }
 
-    if (error) {
-      console.error('Supabase error:', error);
+      if (data) {
+
+        const { error: updateError } = await supabase
+          .from('users')
+          .update(profile)
+          .eq('vk_id', fetchedUser.id);
+
+        if (updateError) throw updateError;
+
+      } else {
+
+        const { error: insertError } = await supabase
+          .from('users')
+          .insert(profile);
+
+        if (insertError) throw insertError;
+
+      }
+
+      alert('Профиль опубликован!');
+
+      // обновляем данные в Exchange
+      window.location.reload();
+
+    } catch (error) {
+
+      console.error(error);
       alert('Ошибка публикации профиля');
-      return;
-    }
 
-    alert('Профиль опубликован!');
+    }
 
   };
 
-
-  const renderSkillBadge = (item) => (
-
-    <span
-      key={item.id}
-      className="skill-badge"
-      style={{ marginRight: 6, marginBottom: 6 }}
-    >
-      {item.skill} • {item.level}
+  const renderSkill = (skill) => (
+    <span key={skill.id} className="skill-badge">
+      {skill.skill} • {skill.level}
     </span>
-
   );
-
 
   return (
 
@@ -96,23 +114,20 @@ export const Profile = ({ id, fetchedUser, setActivePanel }) => {
 
           <Card className="glass-card">
 
-            <Div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <Div style={{ display:'flex', gap:16, alignItems:'center' }}>
 
-              <Avatar
-                size={96}
-                src={fetchedUser ? fetchedUser.photo_200 : undefined}
-              />
+              <Avatar size={96} src={fetchedUser?.photo_200} />
 
               <div>
 
                 <Title level="2" className="neon-title">
                   {fetchedUser
                     ? `${fetchedUser.first_name} ${fetchedUser.last_name}`
-                    : 'Пользователь Skill Unity'}
+                    : 'Пользователь'}
                 </Title>
 
                 <Text className="small-muted">
-                  Участник платформы обмена навыками
+                  Участник Skill Unity
                 </Text>
 
               </div>
@@ -134,14 +149,8 @@ export const Profile = ({ id, fetchedUser, setActivePanel }) => {
 
             <Textarea
               value={about}
-              onChange={(e) => setAbout(e.target.value)}
+              onChange={(e)=>setAbout(e.target.value)}
               placeholder="Расскажите о себе..."
-              style={{
-                background: 'rgba(10,10,10,0.6)',
-                color: '#fff',
-                borderRadius: 12,
-                marginTop: 8
-              }}
             />
 
           </Div>
@@ -157,41 +166,19 @@ export const Profile = ({ id, fetchedUser, setActivePanel }) => {
               🟢 Могу научить
             </Title>
 
-            {skillsOffer.length === 0 ? (
+            {skillsOffer.length === 0
+              ? <Text>Навыки не добавлены</Text>
+              : <Div style={{display:'flex',gap:6,flexWrap:'wrap'}}>{skillsOffer.map(renderSkill)}</Div>
+            }
 
-              <Card className="glass-card light">
-
-                <Div className="section">
-
-                  <Text>Вы ещё не добавили навыки</Text>
-
-                  <div className="card-actions">
-
-                    <Button
-                      className="btn-yellow"
-                      stretched
-                      onClick={() => setActivePanel('catalog')}
-                    >
-                      Добавить навыки
-                    </Button>
-
-                  </div>
-
-                </Div>
-
-              </Card>
-
-            ) : (
-
-              <Card className="glass-card light">
-
-                <Div style={{ display: 'flex', flexWrap: 'wrap' }}>
-                  {skillsOffer.map(renderSkillBadge)}
-                </Div>
-
-              </Card>
-
-            )}
+            <Button
+              className="btn-yellow"
+              stretched
+              onClick={()=>setActivePanel('catalog')}
+              style={{marginTop:10}}
+            >
+              Добавить навыки
+            </Button>
 
           </Div>
 
@@ -206,41 +193,19 @@ export const Profile = ({ id, fetchedUser, setActivePanel }) => {
               🟡 Хочу научиться
             </Title>
 
-            {skillsLearn.length === 0 ? (
+            {skillsLearn.length === 0
+              ? <Text>Интересы не добавлены</Text>
+              : <Div style={{display:'flex',gap:6,flexWrap:'wrap'}}>{skillsLearn.map(renderSkill)}</Div>
+            }
 
-              <Card className="glass-card light">
-
-                <Div className="section">
-
-                  <Text>Вы ещё не указали интересы</Text>
-
-                  <div className="card-actions">
-
-                    <Button
-                      className="btn-yellow"
-                      stretched
-                      onClick={() => setActivePanel('catalog')}
-                    >
-                      Добавить интерес
-                    </Button>
-
-                  </div>
-
-                </Div>
-
-              </Card>
-
-            ) : (
-
-              <Card className="glass-card light">
-
-                <Div style={{ display: 'flex', flexWrap: 'wrap' }}>
-                  {skillsLearn.map(renderSkillBadge)}
-                </Div>
-
-              </Card>
-
-            )}
+            <Button
+              className="btn-yellow"
+              stretched
+              onClick={()=>setActivePanel('catalog')}
+              style={{marginTop:10}}
+            >
+              Добавить интерес
+            </Button>
 
           </Div>
 
@@ -255,10 +220,9 @@ export const Profile = ({ id, fetchedUser, setActivePanel }) => {
               className="btn-green"
               stretched
               size="l"
-              disabled={saving}
               onClick={publishProfile}
             >
-              {saving ? 'Публикация...' : '📡 Опубликовать профиль'}
+              📡 Опубликовать профиль
             </Button>
 
           </Div>
