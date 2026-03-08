@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import bridge from '@vkontakte/vk-bridge';
 import { Panel, PanelHeader, Group, Div, Title, Text, Card, Button, Avatar } from '@vkontakte/vkui';
+import { supabase } from '../supabase';
 
 export const Exchange = ({ id }) => {
 
@@ -22,26 +23,33 @@ export const Exchange = ({ id }) => {
     });
 
     const loadProfiles = async () => {
-  const { data, error } = await supabase
-    .from('users')
-    .select('*');
 
-  if (!error) {
-    setDirectory(data);
-  }
-};
+      const { data, error } = await supabase
+        .from('users')
+        .select('*');
 
-loadProfiles();
+      if (error) {
+        console.error('Ошибка загрузки профилей:', error);
+        return;
+      }
+
+      setDirectory(data || []);
+
+    };
+
+    loadProfiles();
 
   }, []);
 
   const matches = directory.filter(profile => {
 
+    const skills = profile.skills_offer || [];
+
     if (!selectedCategory && !selectedSkill && !selectedLevel) return true;
 
-    if (!profile.skills || profile.skills.length === 0) return false;
+    if (skills.length === 0) return false;
 
-    return profile.skills.some(s => {
+    return skills.some(s => {
 
       if (selectedSkill && s.skill !== selectedSkill) return false;
       if (selectedCategory && s.category !== selectedCategory) return false;
@@ -58,7 +66,6 @@ loadProfiles();
 
   });
 
-
   const openVKChat = async (userId) => {
 
     const link = `https://vk.com/im?sel=${userId}`;
@@ -71,7 +78,6 @@ loadProfiles();
 
   };
 
-
   return (
 
     <Panel id={id} className="skill-background">
@@ -79,8 +85,6 @@ loadProfiles();
       <div className="skill-content">
 
         <PanelHeader />
-
-        {/* ФИЛЬТР */}
 
         <Group>
 
@@ -93,7 +97,6 @@ loadProfiles();
               Выберите категорию, навык и минимальный уровень
             </Text>
           </Div>
-
 
           {!selectedCategory && (
 
@@ -128,7 +131,6 @@ loadProfiles();
             </Div>
 
           )}
-
 
           {selectedCategory && !selectedSkill && (
 
@@ -181,7 +183,6 @@ loadProfiles();
             </Div>
 
           )}
-
 
           {selectedSkill && (
 
@@ -246,9 +247,6 @@ loadProfiles();
 
         </Group>
 
-
-        {/* РЕЗУЛЬТАТЫ */}
-
         <Group>
 
           <Div>
@@ -256,7 +254,6 @@ loadProfiles();
               Результаты
             </Title>
           </Div>
-
 
           {matches.length === 0 && (
 
@@ -266,69 +263,71 @@ loadProfiles();
 
           )}
 
+          {matches.map((p, idx) => {
 
-          {matches.map((p, idx) => (
+            const skills = p.skills_offer || [];
 
-            <Card key={p.id || idx} className="user-card">
+            return (
 
-              <Div style={{ display: 'flex', gap: 14 }}>
+              <Card key={p.id || idx} className="user-card">
 
-                <Avatar size={64} src={p.photo || p.avatar} />
+                <Div style={{ display: 'flex', gap: 14 }}>
 
-                <div style={{ flex: 1 }}>
+                  <Avatar size={64} src={p.avatar} />
 
-                  <Title level="3">
-                    {p.name || `${p.first_name} ${p.last_name}`}
-                  </Title>
+                  <div style={{ flex: 1 }}>
 
-                  <Text className="small-muted" style={{ marginTop: 6 }}>
-                    {p.about || 'Информация отсутствует'}
-                  </Text>
+                    <Title level="3">{p.name}</Title>
 
-                  <div style={{ marginTop: 10 }}>
+                    <Text className="small-muted" style={{ marginTop: 6 }}>
+                      {p.about || 'Информация отсутствует'}
+                    </Text>
 
-                    {p.skills && p.skills.length > 0 ? (
+                    <div style={{ marginTop: 10 }}>
 
-                      p.skills.map((s, i) => (
-                        <span key={i} className="skill-badge" style={{ marginRight: 6 }}>
-                          {s.skill} • {s.level}
-                        </span>
-                      ))
+                      {skills.length > 0 ? (
 
-                    ) : (
-                      <Text className="small-muted">Навыки не указаны</Text>
-                    )}
+                        skills.map((s, i) => (
+                          <span key={i} className="skill-badge" style={{ marginRight: 6 }}>
+                            {s.skill} • {s.level}
+                          </span>
+                        ))
+
+                      ) : (
+                        <Text className="small-muted">Навыки не указаны</Text>
+                      )}
+
+                    </div>
 
                   </div>
 
-                </div>
+                </Div>
 
-              </Div>
+                <Div className="card-actions">
 
+                  <Button
+                    className="btn-green"
+                    stretched
+                    onClick={() => openVKChat(p.vk_id)}
+                  >
+                    ✉️ Написать
+                  </Button>
 
-              <Div className="card-actions">
+                  <Button
+                    mode="secondary"
+                    stretched
+                    onClick={() => alert(JSON.stringify(p, null, 2))}
+                  >
+                    Подробнее
+                  </Button>
 
-                <Button
-                  className="btn-green"
-                  stretched
-                  onClick={() => openVKChat(p.vkId || p.id)}
-                >
-                  ✉️ Написать
-                </Button>
+                </Div>
 
-                <Button
-                  mode="secondary"
-                  stretched
-                  onClick={() => alert(JSON.stringify(p, null, 2))}
-                >
-                  Подробнее
-                </Button>
+              </Card>
 
-              </Div>
+            );
 
-            </Card>
-
-          ))}
+          })}
 
         </Group>
 
