@@ -21,8 +21,17 @@ export const Exchange = ({ id }) => {
       '🌍 Языки': ['Английский', 'Китайский', 'Испанский']
     });
 
-    const saved = JSON.parse(localStorage.getItem('skillUnityDirectory') || '[]');
-    setDirectory(saved);
+    const loadProfiles = async () => {
+  const { data, error } = await supabase
+    .from('users')
+    .select('*');
+
+  if (!error) {
+    setDirectory(data);
+  }
+};
+
+loadProfiles();
 
   }, []);
 
